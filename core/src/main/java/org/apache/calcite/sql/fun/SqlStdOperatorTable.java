@@ -1563,17 +1563,17 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
           SqlFunctionCategory.NUMERIC);
 
   public static final SqlFunction PI =
-          new SqlFunction(
-                  "PI",
-                  SqlKind.OTHER_FUNCTION,
-                  ReturnTypes.DOUBLE,
-                  null,
-                  OperandTypes.NILADIC,
-                  SqlFunctionCategory.NUMERIC) {
-            @Override public SqlSyntax getSyntax() {
-              return SqlSyntax.FUNCTION_ID;
-            }
-          };
+      new SqlFunction(
+          "PI",
+          SqlKind.OTHER_FUNCTION,
+          ReturnTypes.DOUBLE,
+          null,
+          OperandTypes.NILADIC,
+          SqlFunctionCategory.NUMERIC) {
+        @Override public SqlSyntax getSyntax() {
+          return SqlSyntax.FUNCTION_ID;
+        }
+      };
 
   /** {@code FIRST} function to be used within {@code MATCH_RECOGNIZE}. */
   public static final SqlFunction FIRST =
