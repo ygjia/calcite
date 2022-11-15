@@ -17,6 +17,7 @@
 package org.apache.calcite.rex;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.calcite.util.Pair;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -37,6 +38,7 @@ public class RexWindow {
   private final RexWindowBound upperBound;
   private final boolean isRows;
   private final String digest;
+  public final int nodeCount;
 
   //~ Constructors -----------------------------------------------------------
 
@@ -59,6 +61,7 @@ public class RexWindow {
     this.lowerBound = lowerBound;
     this.upperBound = upperBound;
     this.isRows = isRows;
+    this.nodeCount = computeCodeCount();
     this.digest = computeDigest();
   }
 
@@ -149,6 +152,14 @@ public class RexWindow {
   public boolean isRows() {
     return isRows;
   }
+
+  private int computeCodeCount() {
+    return RexUtil.nodeCount(partitionKeys)
+            + RexUtil.nodeCount(Pair.left(orderKeys))
+            + (lowerBound == null ? 0 : lowerBound.nodeCount())
+            + (upperBound == null ? 0 : upperBound.nodeCount());
+  }
+
 }
 
 // End RexWindow.java
