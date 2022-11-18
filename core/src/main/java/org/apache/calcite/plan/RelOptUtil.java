@@ -112,7 +112,10 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.AbstractList;
@@ -134,6 +137,8 @@ import java.util.TreeSet;
  */
 public abstract class RelOptUtil {
   //~ Static fields/initializers ---------------------------------------------
+  public static final Logger LOGGER =
+          LoggerFactory.getLogger(RelOptUtil.class);
 
   public static final double EPSILON = 1.0e-5;
 
@@ -2755,6 +2760,37 @@ public abstract class RelOptUtil {
       Project project) {
     final List<RexNode> list = new ArrayList<>();
     pushShuttle(project).visitList(nodes, list);
+    return list;
+  }
+
+  /** As {@link #pushPastProject}, but returns null if the resulting expressions
+   * are significantly more complex.
+   *
+   * @param bloat Maximum allowable increase in complexity */
+  public static @Nullable List<RexNode> pushPastProjectUnlessBloat(List<? extends RexNode> nodes, Project project, int bloat) {
+    if (bloat < 0) {
+      // If bloat is negative never merge.
+      return null;
+    }
+    final List<RexNode> list = pushPastProject(nodes, project);
+    final int bottomCount = RexUtil.nodeCount(project.getProjects());
+    final int topCount = RexUtil.nodeCount(nodes);
+    final int mergedCount = RexUtil.nodeCount(list);
+    final boolean mergeDisabled = mergedCount > bottomCount + topCount + bloat;
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("ProjectMerge debug info, bottom project: [count:{}, info:{}],\r\n" +
+              "top project: [count:{}, info:{}],\r\n" +
+              "merge project: [count:{}, info:{}],\r\n" +
+              "bloat:{}, mergeDisabled:{}",
+              bottomCount, project.getProjects().toString(),
+              topCount, nodes.toString(),
+              mergedCount, list.toString(), bloat, mergeDisabled);
+    }
+    if (mergeDisabled) {
+      // The merged expression is more complex than the input expressions.
+      // Do not merge.
+      return null;
+    }
     return list;
   }
 
